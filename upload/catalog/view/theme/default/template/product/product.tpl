@@ -251,11 +251,28 @@
     <?php if ($review_status) { ?>
     <a href="#tab-review"><?php echo $tab_review; ?></a>
     <?php } ?>
+    <?php if ($devices) { ?>
+    <a href="#tab-device"><?php echo $tab_device; ?></a>
+    <?php } ?>
     <?php if ($products) { ?>
     <a href="#tab-related"><?php echo $tab_related; ?> (<?php echo count($products); ?>)</a>
     <?php } ?>
   </div>
   <div id="tab-description" class="tab-content"><?php echo $description; ?></div>
+  <?php if ($devices) { ?>
+  <div id="tab-device" class="tab-content">
+    <div class="box-device">
+      <?php foreach ($devices as $device) { ?>
+      <div>
+        <?php if ($device['image']) { ?>
+        <div class="image"><a href="<?php echo $device['href']; ?>"><img src="<?php echo $device['thumb']; ?>" alt="<?php echo $device['name']; ?>" /></a></div>
+        <?php } ?>
+        <div class="name"><a href="<?php echo $device['href']; ?>"><?php echo $device['name']; ?></a></div>
+       </div>
+      <?php } ?>
+    </div>
+  </div>
+  <?php } ?>
   <?php if ($attribute_groups) { ?>
   <div id="tab-attribute" class="tab-content">
     <table class="attribute">
