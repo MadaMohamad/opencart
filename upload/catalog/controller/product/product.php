@@ -40,6 +40,7 @@ class ControllerProductProduct extends Controller {
 				}
 			}
 			
+
 			// Set the last category breadcrumb
 			$category_info = $this->model_catalog_category->getCategory($category_id);
 				
@@ -69,7 +70,6 @@ class ControllerProductProduct extends Controller {
 				);
 			}
 		}
-		
 		$this->load->model('catalog/manufacturer');	
 		
 		if (isset($this->request->get['manufacturer_id'])) {
@@ -102,6 +102,7 @@ class ControllerProductProduct extends Controller {
 			if ($manufacturer_info) {	
 				$this->data['breadcrumbs'][] = array(
 					'text'	    => $manufacturer_info['name'],
+					'image'     => $manufacturer_info['image'],
 					'href'	    => $this->url->link('product/manufacturer/info', 'manufacturer_id=' . $this->request->get['manufacturer_id'] . $url),					
 					'separator' => $this->language->get('text_separator')
 				);
@@ -121,6 +122,10 @@ class ControllerProductProduct extends Controller {
 						
 			if (isset($this->request->get['description'])) {
 				$url .= '&description=' . $this->request->get['description'];
+			}
+			
+			if (isset($this->request->get['device_id'])) {
+				$url .= '&device_id=' . $this->request->get['device_id'];
 			}
 			
 			if (isset($this->request->get['category_id'])) {
@@ -221,16 +226,32 @@ class ControllerProductProduct extends Controller {
 				'separator' => $this->language->get('text_separator')
 			);			
 			
+			$this->data['categories'] = array();
+			$categories = $this->model_catalog_product->getCategoriesByProductId($this->request->get['product_id']);
+			foreach($categories as $category){
+				$path = $this->getPath($category['category_id']);
+				$category_info = $this->model_catalog_category->getCategory($category['category_id']);
+				if($path){
+					$cat_path = $path;
+				}else{
+					$cat_path = $category_info['category_id'];
+				}
+				$this->data['categories'][] = array(
+					'name' => $category_info['name'],
+					'link' => $this->url->link('product/category','&path='.$cat_path)
+				);
+			}
 			$this->document->setTitle($product_info['name']);
 			$this->document->setDescription($product_info['meta_description']);
 			$this->document->setKeywords($product_info['meta_keyword']);
 			$this->document->addLink($this->url->link('product/product', 'product_id=' . $this->request->get['product_id']), 'canonical');
+
 			$this->document->addScript('catalog/view/javascript/jquery/tabs.js');
 			$this->document->addScript('catalog/view/javascript/jquery/colorbox/jquery.colorbox-min.js');
 			$this->document->addStyle('catalog/view/javascript/jquery/colorbox/colorbox.css');
 			
 			$this->data['heading_title'] = $product_info['name'];
-			
+
 			$this->data['text_select'] = $this->language->get('text_select');
 			$this->data['text_manufacturer'] = $this->language->get('text_manufacturer');
 			$this->data['text_model'] = $this->language->get('text_model');
@@ -238,6 +259,8 @@ class ControllerProductProduct extends Controller {
 			$this->data['text_points'] = $this->language->get('text_points');	
 			$this->data['text_discount'] = $this->language->get('text_discount');
 			$this->data['text_stock'] = $this->language->get('text_stock');
+			$this->data['text_location'] = $this->language->get('text_location');
+			$this->data['text_upc'] = $this->language->get('text_upc');
 			$this->data['text_price'] = $this->language->get('text_price');
 			$this->data['text_tax'] = $this->language->get('text_tax');
 			$this->data['text_discount'] = $this->language->get('text_discount');
@@ -270,13 +293,15 @@ class ControllerProductProduct extends Controller {
 			$this->data['tab_attribute'] = $this->language->get('tab_attribute');
 			$this->data['tab_review'] = sprintf($this->language->get('tab_review'), $product_info['reviews']);
 			$this->data['tab_related'] = $this->language->get('tab_related');
-			
+			$this->data['tab_device'] = $this->language->get('tab_device');
 			$this->data['product_id'] = $this->request->get['product_id'];
 			$this->data['manufacturer'] = $product_info['manufacturer'];
 			$this->data['manufacturers'] = $this->url->link('product/manufacturer/info', 'manufacturer_id=' . $product_info['manufacturer_id']);
-			$this->data['model'] = $product_info['model'];
-			$this->data['reward'] = $product_info['reward'];
-			$this->data['points'] = $product_info['points'];
+			$this->data['model']    = $product_info['model'];
+			$this->data['location'] = $product_info['location'];
+			$this->data['upc']      = $product_info['upc'];
+			$this->data['reward']   = $product_info['reward'];
+			$this->data['points']   = $product_info['points'];
 			
 			if ($product_info['quantity'] <= 0) {
 				$this->data['stock'] = $product_info['stock_status'];
@@ -294,6 +319,12 @@ class ControllerProductProduct extends Controller {
 				$this->data['popup'] = '';
 			}
 			
+			if ($product_info['manufacturer_image']) {
+					$this->data['manufacturer_image'] = $this->model_tool_image->resize($product_info['manufacturer_image'], $this->config->get('config_image_compare_width'), $this->config->get('config_image_compare_height'));
+				} else {
+					$this->data['manufacturer_image'] = false;
+				}
+				
 			if ($product_info['image']) {
 				$this->data['thumb'] = $this->model_tool_image->resize($product_info['image'], $this->config->get('config_image_thumb_width'), $this->config->get('config_image_thumb_height'));
 			} else {
@@ -337,9 +368,40 @@ class ControllerProductProduct extends Controller {
 				$this->data['discounts'][] = array(
 					'quantity' => $discount['quantity'],
 					'price'    => $this->currency->format($this->tax->calculate($discount['price'], $product_info['tax_class_id'], $this->config->get('config_tax')))
+					
 				);
 			}
+			$results = array();
+			$results = $this->model_catalog_product->getAllTabsOfProducts($this->request->get['product_id']);
+			$this->data['tabs'] = $results;
+
+			$this->data['devices'] = array();
+			$this->load->model('catalog/device');
+		
+			if (isset($this->request->post['product_device'])) {
+				$devices = $this->request->post['product_device'];
+			} elseif (isset($this->request->get['product_id'])) {		
+				$devices = $this->model_catalog_product->getProductDevices($this->request->get['product_id']);
+			} else {
+				$devices = array();
+			}
+		
+			$this->data['devices'] = array();
 			
+			foreach ($devices as $device_id) {
+				$device_info = $this->model_catalog_device->getDevice($device_id);
+				
+				if ($device_info) {
+					$this->data['devices'][] = array(
+						'device_id' => $device_info['device_id'],
+						'name'      => $device_info['name'],
+						'href'      => $this->url->link('product/device/info', 'device_id=' . $device_info['device_id']),
+						'image'     => $device_info['image'],
+						'thumb'     => $this->model_tool_image->resize($device_info['image'], $this->config->get('config_image_related_width'), $this->config->get('config_image_related_height'))
+					);
+				}
+			}
+
 			$this->data['options'] = array();
 			
 			foreach ($this->model_catalog_product->getProductOptions($this->request->get['product_id']) as $option) { 
@@ -398,7 +460,7 @@ class ControllerProductProduct extends Controller {
 			$this->data['attribute_groups'] = $this->model_catalog_product->getProductAttributes($this->request->get['product_id']);
 			
 			$this->data['products'] = array();
-			
+
 			$results = $this->model_catalog_product->getProductRelated($this->request->get['product_id']);
 			
 			foreach ($results as $result) {
@@ -437,7 +499,6 @@ class ControllerProductProduct extends Controller {
 					'href'    	 => $this->url->link('product/product', 'product_id=' . $result['product_id'])
 				);
 			}	
-			
 			$this->data['tags'] = array();
 			
 			if ($product_info['tag']) {		
@@ -498,7 +559,9 @@ class ControllerProductProduct extends Controller {
 			if (isset($this->request->get['description'])) {
 				$url .= '&description=' . $this->request->get['description'];
 			}
-					
+			if (isset($this->request->get['device_id'])) {
+				$url .= '&device_id=' . $this->request->get['device_id'];
+			}		
 			if (isset($this->request->get['category_id'])) {
 				$url .= '&category_id=' . $this->request->get['category_id'];
 			}
@@ -709,6 +772,26 @@ class ControllerProductProduct extends Controller {
 		
 		$captcha->showImage();
 	}
+	
+	protected function getPath($parent_id, $current_path = '') {
+					$category_info = $this->model_catalog_category->getCategory($parent_id);
+				
+					if ($category_info) {
+						if (!$current_path) {
+							$new_path = $category_info['category_id'];
+						} else {
+							$new_path = $category_info['category_id'] . '_' . $current_path;
+						}	
+					
+						$path = $this->getPath($category_info['parent_id'], $new_path);
+								
+						if ($path) {
+							return $path;
+						} else {
+							return $new_path;
+						}
+					}
+				}
 	
 	public function upload() {
 		$this->language->load('product/product');
