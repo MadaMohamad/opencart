@@ -1641,3 +1641,116 @@ ul.box-filter > li ul {
 .banner div img {
 	margin-bottom: 20px;
 }
+
+/* Devices */
+.device-list {
+	border: 1px solid #DBDEE1;
+	padding: 5px;
+	overflow: auto;
+	margin-bottom: 20px;
+}
+.device-heading {
+	background: #F8F8F8;
+	font-size: 15px;
+	font-weight: bold;
+	padding: 5px 8px;
+	margin-bottom: 6px;
+}
+.device-content {
+	padding: 8px;
+}
+.device-list ul {
+	
+	float: left;
+	width: 25%;
+	margin: 0;
+	list-style: none;
+	margin-bottom: 10px;
+	text-align: center;
+}
+
+.device-list ul li {
+	margin-top: 10px;
+}
+.device-list ul img {
+	padding: 0px;
+	border-bottom: #c9c9c9 1px solid;
+}
+
+.device-list ul a {
+}
+
+/* box devices */
+.box-device {
+	width: 100%;
+	overflow: auto;
+	}
+	
+.box-device > div {
+	width: 130px;
+	display: inline-block;
+	vertical-align: top;
+	margin-right: 20px;
+	margin-bottom: 20px;
+}
+#column-left + #column-right + #content .box-device > div {
+	width: 119px;
+}
+.box-device .image {
+	display: block;
+	margin-top: 10px;
+	text-align: center;
+}
+.box-device .image img {
+	padding: 0px;
+	border-bottom: #c9c9c9 1px solid;
+ }
+.box-device .name a {
+	color: #0873bb;
+	font-weight: bold;
+	text-decoration: none;
+	display: block;
+	margin-bottom: 4px;
+	text-align: center;
+}
+.name {
+	text-align: center;
+	vertical-align: text-bottom;
+}
+
+.name span {
+	color: #979797;
+}
+
+#device-top {
+	display: block;
+	vertical-align: middle;
+	height: 80px;
+	width: 100%;
+}
+
+#device-top .image {
+	width: 103px;
+	float: left;
+}
+
+#device-top h1 {
+	display: block;
+	width: 600px;
+	float:left;
+	height: 103px;
+	margin: 0;
+	vertical-align: bottom;
+}
+
+.device-empty {
+	width: 100%;
+	display: block;
+	float: left;
+	padding: 5px;
+	border: #e8e8e8 solid 1px;
+	margin-bottom: 20px;
+}
+
+
+
